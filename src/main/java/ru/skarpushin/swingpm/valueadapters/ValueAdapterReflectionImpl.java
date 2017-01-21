@@ -24,7 +24,7 @@ public class ValueAdapterReflectionImpl<E> implements ValueAdapter<E> {
 
 	public ValueAdapterReflectionImpl(Object target, String propertyName) {
 		Preconditions.checkArgument(target != null);
-		Preconditions.checkArgument(Strings.isNullOrEmpty(propertyName));
+		Preconditions.checkArgument(!Strings.isNullOrEmpty(propertyName));
 
 		this.target = target;
 		this.propertyName = propertyName;

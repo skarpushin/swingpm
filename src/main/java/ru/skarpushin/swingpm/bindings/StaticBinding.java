@@ -31,7 +31,7 @@ public class StaticBinding {
 			String methodName) {
 		Preconditions.checkNotNull(property);
 		Preconditions.checkNotNull(targetObject);
-		Preconditions.checkArgument(Strings.isNullOrEmpty(methodName));
+		Preconditions.checkArgument(!Strings.isNullOrEmpty(methodName));
 
 		try {
 			Method handlerMethod = getHandlerMethod(targetObject, methodName);
@@ -87,7 +87,7 @@ public class StaticBinding {
 			String targetProperty) {
 		Preconditions.checkNotNull(property);
 		Preconditions.checkNotNull(targetObject);
-		Preconditions.checkArgument(Strings.isNullOrEmpty(targetProperty));
+		Preconditions.checkArgument(!Strings.isNullOrEmpty(targetProperty));
 
 		try {
 			return new PropertyValuePropagationBinding(property,

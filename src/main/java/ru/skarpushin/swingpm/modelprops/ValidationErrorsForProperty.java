@@ -12,7 +12,7 @@ public class ValidationErrorsForProperty implements FilterPredicate<ValidationEr
 	private final String fieldToken;
 
 	public ValidationErrorsForProperty(String fieldToken) {
-		Preconditions.checkArgument(Strings.isNullOrEmpty(fieldToken));
+		Preconditions.checkArgument(!Strings.isNullOrEmpty(fieldToken));
 
 		this.fieldToken = fieldToken;
 	}

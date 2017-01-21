@@ -39,7 +39,7 @@ public class ModelProperty<E> implements FilterPredicate<ValidationError> {
 	public ModelProperty(Object source, ValueAdapter<E> valueAdapter, String propertyName,
 			ListEx<ValidationError> veSource) {
 		Preconditions.checkArgument(valueAdapter != null);
-		Preconditions.checkArgument(Strings.isNullOrEmpty(propertyName));
+		Preconditions.checkArgument(!Strings.isNullOrEmpty(propertyName));
 
 		this.source = source;
 		this.valueAdapter = valueAdapter;
