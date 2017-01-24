@@ -14,6 +14,7 @@ public class PropertyTextValueBinding implements Binding, PropertyChangeListener
 
 	private final ModelPropertyAccessor<String> property;
 	private Document textDocument;
+	private boolean pausePropagation = false;
 
 	public PropertyTextValueBinding(ModelPropertyAccessor<String> property, Document textDocument) {
 		this.property = property;
@@ -51,7 +52,9 @@ public class PropertyTextValueBinding implements Binding, PropertyChangeListener
 				return;
 			}
 
+			pausePropagation = true;
 			textDocument.remove(0, textDocument.getLength());
+			pausePropagation = false;
 			textDocument.insertString(0, (String) evt.getNewValue(), null);
 		} catch (Throwable exc) {
 			throw new RuntimeException("Failed to propagate text property change from model to view", exc);
@@ -74,6 +77,9 @@ public class PropertyTextValueBinding implements Binding, PropertyChangeListener
 	}
 
 	private void propagateValueFromViewToModel() {
+		if (pausePropagation) {
+			return;
+		}
 		try {
 			property.setValue(getTextFromView());
 		} catch (Throwable exc) {
