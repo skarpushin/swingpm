@@ -101,7 +101,7 @@ public class ListExImpl<E> extends ListExBase<E> {
 		int index = indexOf(o);
 		boolean contained = index != -1;
 		if (contained) {
-			remove(index);
+			internalRemove(index);
 		}
 		return contained;
 	}

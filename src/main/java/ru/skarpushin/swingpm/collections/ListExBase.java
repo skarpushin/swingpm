@@ -12,27 +12,34 @@ public abstract class ListExBase<E> implements ListEx<E> {
 
 	@Override
 	public ListIterator<E> listIterator() {
-		throw new IllegalStateException("Not implemented");
+		throw new IllegalStateException("Not implemented. Optional operation.");
 	}
 
 	@Override
 	public ListIterator<E> listIterator(int index) {
-		throw new IllegalStateException("Not implemented");
+		throw new IllegalStateException("Not implemented. Optional operation.");
 	}
 
 	@Override
 	public boolean removeAll(Collection<?> c) {
-		throw new IllegalStateException("Not implemented");
+		if (c == null) {
+			return false;
+		}
+		boolean ret = true;
+		for (Object item : c) {
+			ret |= remove(item);
+		}
+		return ret;
 	}
 
 	@Override
 	public boolean retainAll(Collection<?> c) {
-		throw new IllegalStateException("Not implemented");
+		throw new IllegalStateException("Not implemented. Optional operation.");
 	}
 
 	@Override
 	public List<E> subList(int fromIndex, int toIndex) {
-		throw new IllegalStateException("Not implemented");
+		throw new IllegalStateException("Not implemented. Optional operation.");
 	}
 
 	@Override
