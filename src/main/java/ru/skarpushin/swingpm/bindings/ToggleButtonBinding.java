@@ -1,24 +1,22 @@
 package ru.skarpushin.swingpm.bindings;
 
-import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.swing.Action;
 import javax.swing.JToggleButton;
 
 import org.apache.log4j.Logger;
 
 import ru.skarpushin.swingpm.modelprops.ModelPropertyAccessor;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
-import ru.skarpushin.swingpm.tools.actions.LocalizedAction;
 
 public class ToggleButtonBinding implements Binding {
 	private static Logger log = Logger.getLogger(ToggleButtonBinding.class);
 
 	private JToggleButton toggleButton;
 	private ModelPropertyAccessor<Boolean> booleanProperty;
-	private Action action;
 
 	public ToggleButtonBinding(ModelPropertyAccessor<Boolean> booleanProperty, JToggleButton toggleButton) {
 		this.booleanProperty = booleanProperty;
@@ -26,34 +24,28 @@ public class ToggleButtonBinding implements Binding {
 
 		toggleButton.setSelected(booleanProperty.getValue());
 
-		toggleButton.setAction(getAction());
+		toggleButton.setText(SwingPmSettings.getMessages().get(getActionMessageCode()));
+		toggleButton.getModel().addItemListener(toggleButtonChangeListener);
+
 		booleanProperty.addPropertyChangeListener(propertyChangeListener);
 	}
 
 	private final PropertyChangeListener propertyChangeListener = new PropertyChangeListener() {
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			// log.trace(booleanProperty.getPropertyName() +
-			// ": onPropertyChange = " + evt.getNewValue());
+			log.debug(booleanProperty.getPropertyName() + ": onChange from PM = " + evt.getNewValue());
 			toggleButton.getModel().setSelected((Boolean) evt.getNewValue());
 		}
 	};
 
-	@SuppressWarnings("serial")
-	private Action getAction() {
-		if (action == null) {
-			action = new LocalizedAction(getActionMessageCode()) {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					// log.trace(booleanProperty.getPropertyName() +
-					// ": onAction, stateId = " +
-					// toggleButton.getModel().isSelected());
-					booleanProperty.setValue(toggleButton.getModel().isSelected());
-				}
-			};
+	private ItemListener toggleButtonChangeListener = new ItemListener() {
+		@Override
+		public void itemStateChanged(ItemEvent e) {
+			boolean isSelected = toggleButton.getModel().isSelected();
+			log.debug(booleanProperty.getPropertyName() + ": onChanged from UI, stateId = " + isSelected);
+			booleanProperty.setValue(isSelected);
 		}
-		return action;
-	}
+	};
 
 	private String getActionMessageCode() {
 		// NOTE: Not sure that this is clean solution. Probably we should
@@ -83,7 +75,8 @@ public class ToggleButtonBinding implements Binding {
 
 	@Override
 	public void unbind() {
-		toggleButton.setAction(null);
+		toggleButton.setText("");
+		toggleButton.getModel().removeItemListener(toggleButtonChangeListener);
 		booleanProperty.removePropertyChangeListener(propertyChangeListener);
 		toggleButton = null;
 	}
