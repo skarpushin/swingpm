@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.LayoutManager2;
 import java.awt.Rectangle;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -166,15 +167,6 @@ public class SgLayout implements LayoutManager2 {
 		return null;
 	}
 
-	private int getVGapTotalSize() {
-		// we have gaps only between components
-		return vgap * (rows - 1);
-	}
-
-	private int getHGapTotalSize() {
-		return hgap * (cols - 1);
-	}
-
 	@Override
 	public void removeLayoutComponent(Component comp) {
 		synchronized (comp.getTreeLock()) {
@@ -184,6 +176,8 @@ public class SgLayout implements LayoutManager2 {
 
 	@Override
 	public Dimension minimumLayoutSize(Container parent) {
+		log.debug("ENTERING minimumLayoutSize");
+
 		synchronized (parent.getTreeLock()) {
 			Insets parentInsets = parent.getInsets();
 
@@ -192,10 +186,12 @@ public class SgLayout implements LayoutManager2 {
 			calcConstColSizes(colsSizesEffective, minimumWidth);
 			calcConstRowSizes(rowsSizesEffective, minimumHeight);
 
-			Dimension ret = new Dimension(sum(colsSizesEffective, hgap) + parentInsets.left + parentInsets.right,
-					sum(rowsSizesEffective, vgap) + parentInsets.top + parentInsets.bottom);
+			Dimension ret = new Dimension(sum(colsSizesEffective, hgap), sum(rowsSizesEffective, vgap));
 
-			return ret;
+			if (log.isDebugEnabled()) {
+				log.debug("RETURN minimumLayoutSize " + ret);
+			}
+			return add(ret, parentInsets);
 		}
 	}
 
@@ -210,8 +206,24 @@ public class SgLayout implements LayoutManager2 {
 		return ret;
 	}
 
+	private int sumNonWeighted(int[] ints, int gap, int[] sizeTypes) {
+		int ret = 0;
+		for (int i = 0; i < ints.length; i++) {
+			if (sizeTypes[i] == SIZE_TYPE_WEIGHTED) {
+				continue;
+			}
+			ret += ints[i];
+		}
+		if (gap > 0) {
+			ret += gap * (ints.length - 1);
+		}
+		return ret;
+	}
+
 	@Override
 	public Dimension preferredLayoutSize(Container parent) {
+		log.debug("\n\n\nENTERING preferredLayoutSize");
+
 		synchronized (parent.getTreeLock()) {
 			// See how much space we have for our rendering
 			Insets parentInsets = parent.getInsets();
@@ -223,13 +235,27 @@ public class SgLayout implements LayoutManager2 {
 			int[] colsSizesEffective = new int[cols];
 			int[] rowsSizesEffective = new int[rows];
 			calcConstColSizes(colsSizesEffective, preferredWidth);
+			updateComponentsWidths(colsSizesEffective);
 			calcConstRowSizes(rowsSizesEffective, preferredHeight);
-			if (availWidth < sum(colsSizesEffective, hgap) || availHeight < sum(rowsSizesEffective, vgap)) {
-				log.warn("Returning MINIMUM layout size");
-				return minimumLayoutSize(parent);
+			int prefWidth = sum(colsSizesEffective, hgap);
+			int prefHeight = sum(rowsSizesEffective, vgap);
+			if (availWidth < prefWidth || availHeight < prefHeight) {
+				if (log.isDebugEnabled()) {
+					log.debug("Available size " + availWidth + " x " + availHeight + " is LESS than preferred: "
+							+ prefWidth + " x " + prefHeight);
+				}
+				// return minimumLayoutSize(parent);
 			}
-			return new Dimension(availWidth, availHeight);
+			Dimension ret = new Dimension(prefWidth, prefHeight);
+			if (log.isDebugEnabled()) {
+				log.debug("RETURN preferredLayoutSize: " + ret);
+			}
+			return add(ret, parentInsets);
 		}
+	}
+
+	private Dimension add(Dimension ret, Insets ins) {
+		return new Dimension(ret.width + ins.left + ins.right, ret.height + ins.top + ins.bottom);
 	}
 
 	@Override
@@ -244,6 +270,7 @@ public class SgLayout implements LayoutManager2 {
 
 	@Override
 	public void layoutContainer(Container parent) {
+		log.debug("\n\n\nENTERING layoutContainer");
 		synchronized (parent.getTreeLock()) {
 			// See how much space we have for our rendering
 			Insets parentInsets = parent.getInsets();
@@ -269,25 +296,33 @@ public class SgLayout implements LayoutManager2 {
 
 	private int[] calculateEffectiveRowsSizesForLayout(int availHeight) {
 		int[] rowsSizesEffective = new int[rows];
-		int constHeight = calcConstRowSizes(rowsSizesEffective, preferredHeight);
-		if (availHeight < sum(rowsSizesEffective, vgap)) {
-			log.debug("AvailHeight less than poreferred. Returning min height");
-			calcConstRowSizes(rowsSizesEffective, minimumHeight);
+		calcConstRowSizes(rowsSizesEffective, preferredHeight);
+		int minPreferred = sum(rowsSizesEffective, vgap);
+		if (availHeight < minPreferred) {
+			if (log.isDebugEnabled()) {
+				log.debug("AvailHeight " + availHeight + " less than preferred " + minPreferred);
+			}
+			// calcConstRowSizes(rowsSizesEffective, minimumHeight);
 			return rowsSizesEffective;
 		}
-		calculateWeightedSizes(rowsSizes, rowsSizesTypes, availHeight - constHeight, rowsSizesEffective, vgap);
+		int constHeight = sumNonWeighted(rowsSizesEffective, vgap, rowsSizesTypes);
+		calculateWeightedSizes(rowsSizes, rowsSizesTypes, availHeight - constHeight, rowsSizesEffective);
 		return rowsSizesEffective;
 	}
 
 	private int[] calculateEffectiveColSizesForLayout(int availWidth) {
 		int[] colsSizesEffective = new int[cols];
-		int constWidth = calcConstColSizes(colsSizesEffective, preferredWidth);
-		if (availWidth < sum(colsSizesEffective, hgap)) {
-			log.debug("AvailWidth less than poreferred. Returning min width");
-			calcConstRowSizes(colsSizesEffective, minimumWidth);
+		calcConstColSizes(colsSizesEffective, preferredWidth);
+		int minPreferred = sum(colsSizesEffective, hgap);
+		if (availWidth < minPreferred) {
+			if (log.isDebugEnabled()) {
+				log.debug("AvailWidth " + availWidth + " less than preferred " + minPreferred);
+			}
+			// calcConstColSizes(colsSizesEffective, minimumWidth);
 			return colsSizesEffective;
 		}
-		calculateWeightedSizes(colsSizes, colsSizesTypes, availWidth - constWidth, colsSizesEffective, hgap);
+		int constWidth = sumNonWeighted(colsSizesEffective, hgap, colsSizesTypes);
+		calculateWeightedSizes(colsSizes, colsSizesTypes, availWidth - constWidth, colsSizesEffective);
 		updateComponentsWidths(colsSizesEffective);
 		return colsSizesEffective;
 	}
@@ -296,33 +331,35 @@ public class SgLayout implements LayoutManager2 {
 		for (Entry<Component, SmartGridLayoutConstraints> entry : components.entrySet()) {
 			SmartGridLayoutConstraints c = entry.getValue();
 
-			int left = (c.col > 0 ? hgap : 0) + parentInsets.left;
-			int top = (c.row > 0 ? vgap : 0) + parentInsets.top;
+			int left = parentInsets.left;
 			for (int idxCol = 0; idxCol < c.col; idxCol++) {
 				left += colsSizesEffective[idxCol];
+				left += hgap;
 			}
+
+			int top = parentInsets.top;
 			for (int idxRow = 0; idxRow < c.row; idxRow++) {
 				top += rowsSizesEffective[idxRow];
+				top += vgap;
 			}
 
 			int width = 0;
-			int height = 0;
 			for (int idxCol = c.col; idxCol < c.colspan + c.col; idxCol++) {
 				width += colsSizesEffective[idxCol];
-			}
-			if (c.col > 0) {
-				width -= hgap;
+				if (idxCol > c.col) {
+					width += hgap;
+				}
 			}
 
+			int height = 0;
 			for (int idxRow = c.row; idxRow < c.rowspan + c.row; idxRow++) {
 				height += rowsSizesEffective[idxRow];
-			}
-			if (c.row > 0) {
-				height -= vgap;
+				if (idxRow > c.row) {
+					height += vgap;
+				}
 			}
 
 			Component comp = entry.getKey();
-			// comp.setSize(width, height);
 			comp.setBounds(left, top, width, height);
 		}
 	}
@@ -335,12 +372,9 @@ public class SgLayout implements LayoutManager2 {
 	 * @param dynaSpace
 	 *            space which is dynamically available and is to be distributed
 	 *            between dynamically sized components
-	 * @param gapSize
-	 *            gap size for this direction
 	 * @return
 	 */
-	private static void calculateWeightedSizes(int[] sizes, int[] sizesTypes, int dynaSpace, int[] dstArray,
-			int gapSize) {
+	private static void calculateWeightedSizes(int[] sizes, int[] sizesTypes, int dynaSpace, int[] dstArray) {
 		double dynaSpaceD = (double) dynaSpace;
 		double weightsSumm = 0;
 		for (int i = 0; i < sizes.length; i++) {
@@ -351,7 +385,7 @@ public class SgLayout implements LayoutManager2 {
 
 		for (int i = 0; i < sizes.length; i++) {
 			if (sizesTypes[i] == SIZE_TYPE_WEIGHTED) {
-				dstArray[i] = (int) (dynaSpaceD * ((double) sizes[i]) / weightsSumm) + (i > 0 ? gapSize : 0);
+				dstArray[i] = (int) (dynaSpaceD * ((double) sizes[i]) / weightsSumm);
 			}
 		}
 	}
@@ -364,12 +398,28 @@ public class SgLayout implements LayoutManager2 {
 			for (int idxCol = c.col; idxCol < c.colspan + c.col; idxCol++) {
 				width += colsSizesEffective[idxCol];
 			}
-			if (c.col > 0) {
-				width -= hgap;
-			}
 
 			Component comp = entry.getKey();
-			comp.setSize(width, comp.getHeight());
+			if (log.isDebugEnabled()) {
+				log.debug("Component: " + comp);
+				log.debug("\tCurrent size: " + comp.getSize());
+				log.debug("\tCurrent pref size: " + comp.getPreferredSize());
+			}
+			// comp.setSize(width, comp.getHeight());
+			Rectangle bounds = comp.getBounds();
+			Rectangle newBounds = new Rectangle(bounds.x, bounds.y, width, comp.getHeight());
+			if (!bounds.equals(newBounds)) {
+				if (log.isDebugEnabled()) {
+					log.debug("\tRequested width: " + newBounds.width);
+				}
+
+				comp.setBounds(newBounds);
+
+				if (log.isDebugEnabled()) {
+					log.debug("\tNew size: " + comp.getSize());
+					log.debug("\tNew pref size: " + comp.getPreferredSize());
+				}
+			}
 		}
 	}
 
@@ -379,22 +429,21 @@ public class SgLayout implements LayoutManager2 {
 	 * @param askComponent
 	 *            what size to get when asking component
 	 */
-	private int calcConstRowSizes(int[] effectiveRowsSizesToPopulate, SizeResolver askComponent) {
-		int height = getVGapTotalSize();
+	private void calcConstRowSizes(int[] effectiveRowsSizesToPopulate, SizeResolver askComponent) {
 		for (int idxRow = 0; idxRow < rows; idxRow++) {
 			if (rowsSizesTypes[idxRow] == SIZE_TYPE_CONSTANT) {
-				height += rowsSizes[idxRow];
-				effectiveRowsSizesToPopulate[idxRow] = rowsSizes[idxRow] + (idxRow > 0 ? vgap : 0);
+				effectiveRowsSizesToPopulate[idxRow] = rowsSizes[idxRow];
 			} else if (rowsSizesTypes[idxRow] == SIZE_TYPE_ASKCOMPONENT) {
 				int addedHeight = findMaxHeightWithinRow(idxRow, askComponent);
-				height += addedHeight;
-				effectiveRowsSizesToPopulate[idxRow] = addedHeight + (idxRow > 0 ? vgap : 0);
+				effectiveRowsSizesToPopulate[idxRow] = addedHeight;
 			} else if (rowsSizesTypes[idxRow] == SIZE_TYPE_WEIGHTED) {
 				int addedHeight = findMaxHeightWithinRow(idxRow, minimumHeight);
-				effectiveRowsSizesToPopulate[idxRow] = addedHeight + (idxRow > 0 ? vgap : 0);
+				effectiveRowsSizesToPopulate[idxRow] = addedHeight;
 			}
 		}
-		return height;
+		if (log.isDebugEnabled()) {
+			log.debug("calcConstRowSizes " + Arrays.toString(effectiveRowsSizesToPopulate));
+		}
 	}
 
 	private int findMaxHeightWithinRow(int idxRow, SizeResolver sizeResolver) {
@@ -425,22 +474,21 @@ public class SgLayout implements LayoutManager2 {
 	 * @param askComponent
 	 *            what size to get when asking component
 	 */
-	private int calcConstColSizes(int[] effectiveColsSizesToPopulate, SizeResolver askComponent) {
-		int width = getHGapTotalSize();
+	private void calcConstColSizes(int[] effectiveColsSizesToPopulate, SizeResolver askComponent) {
 		for (int idxCol = 0; idxCol < cols; idxCol++) {
 			if (colsSizesTypes[idxCol] == SIZE_TYPE_CONSTANT) {
-				width += colsSizes[idxCol];
-				effectiveColsSizesToPopulate[idxCol] = colsSizes[idxCol] + (idxCol > 0 ? hgap : 0);
+				effectiveColsSizesToPopulate[idxCol] = colsSizes[idxCol];
 			} else if (colsSizesTypes[idxCol] == SIZE_TYPE_ASKCOMPONENT) {
 				int addedWidth = findMaxWidthWithinColumn(idxCol, askComponent);
-				width += addedWidth;
-				effectiveColsSizesToPopulate[idxCol] = addedWidth + (idxCol > 0 ? hgap : 0);
+				effectiveColsSizesToPopulate[idxCol] = addedWidth;
 			} else if (colsSizesTypes[idxCol] == SIZE_TYPE_WEIGHTED) {
 				int addedWidth = findMaxWidthWithinColumn(idxCol, minimumWidth);
-				effectiveColsSizesToPopulate[idxCol] = addedWidth + (idxCol > 0 ? hgap : 0);
+				effectiveColsSizesToPopulate[idxCol] = addedWidth;
 			}
 		}
-		return width;
+		if (log.isDebugEnabled()) {
+			log.debug("calcConstColSizes " + Arrays.toString(effectiveColsSizesToPopulate));
+		}
 	}
 
 	private int findMaxWidthWithinColumn(int idxCol, SizeResolver sizeResolver) {
