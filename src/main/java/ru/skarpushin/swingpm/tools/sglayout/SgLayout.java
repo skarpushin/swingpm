@@ -112,26 +112,31 @@ public class SgLayout implements LayoutManager2 {
 
 	@Override
 	public void addLayoutComponent(String name, Component comp) {
+		log.error("Operation NOT supported");
 		Preconditions.checkState(false, "Operation not supported");
 	}
 
 	@Override
 	public void addLayoutComponent(Component comp, Object constraints) {
-		Preconditions.checkArgument(comp != null, "Component must not be null");
-		Preconditions.checkArgument(constraints != null && constraints instanceof SmartGridLayoutConstraints,
-				"Constraints must not be bnull and instanceof SmartGridLayoutConstraints");
+		synchronized (comp.getTreeLock()) {
+			Preconditions.checkArgument(comp != null, "Component must not be null");
+			Preconditions.checkArgument(constraints != null && constraints instanceof SmartGridLayoutConstraints,
+					"Constraints must not be bnull and instanceof SmartGridLayoutConstraints");
 
-		SmartGridLayoutConstraints c = (SmartGridLayoutConstraints) constraints;
+			SmartGridLayoutConstraints c = (SmartGridLayoutConstraints) constraints;
 
-		Preconditions.checkArgument(c.col + c.colspan - 1 < cols, "Coordinates intersects with grid bounds by cols");
-		Preconditions.checkArgument(c.row + c.rowspan - 1 < rows, "Coordinates intersects with grid bounds by rows");
+			Preconditions.checkArgument(c.col + c.colspan - 1 < cols,
+					"Coordinates intersects with grid bounds by cols");
+			Preconditions.checkArgument(c.row + c.rowspan - 1 < rows,
+					"Coordinates intersects with grid bounds by rows");
 
-		Component offending = findComponentWithinBounds(c);
-		Preconditions.checkArgument(offending == null,
-				"can't place new component to intersect with existing one: " + offending);
+			Component offending = findComponentWithinBounds(c);
+			Preconditions.checkArgument(offending == null,
+					"can't place new component to intersect with existing one: " + offending);
 
-		// Add component to map
-		components.put(comp, c);
+			// Add component to map
+			components.put(comp, c);
+		}
 	}
 
 	private Component findComponentWithinBounds(SmartGridLayoutConstraints c1) {
@@ -170,16 +175,11 @@ public class SgLayout implements LayoutManager2 {
 		return hgap * (cols - 1);
 	}
 
-	/**
-	 * Defines the way how we ask component for it's size
-	 */
-	private Dimension getComponentPreferredSize(Component comp) {
-		return comp.getPreferredSize();
-	}
-
 	@Override
 	public void removeLayoutComponent(Component comp) {
-		components.remove(comp);
+		synchronized (comp.getTreeLock()) {
+			components.remove(comp);
+		}
 	}
 
 	@Override
@@ -189,30 +189,23 @@ public class SgLayout implements LayoutManager2 {
 
 			int[] colsSizesEffective = new int[cols];
 			int[] rowsSizesEffective = new int[rows];
-			Dimension reqConstSize = calculateEffectiveSizes1stPass(colsSizesEffective, rowsSizesEffective);
-			int weightedColumnCount = getWeightedSizeCount(colsSizesTypes);
-			int weightedRowCount = getWeightedSizeCount(rowsSizesTypes);
+			calcConstColSizes(colsSizesEffective, minimumWidth);
+			calcConstRowSizes(rowsSizesEffective, minimumHeight);
 
-			Dimension ret = new Dimension(
-					reqConstSize.width + weightedColumnCount * DEFAULT_COL_WIDTH + parentInsets.left
-							+ parentInsets.right,
-					reqConstSize.height + weightedRowCount * DEFAULT_ROW_HEIGHT + parentInsets.top
-							+ parentInsets.bottom);
-
-			// if (log.isDebugEnabled()) {
-			// log.debug("minimumLayoutSize()" + ret);
-			// }
+			Dimension ret = new Dimension(sum(colsSizesEffective, hgap) + parentInsets.left + parentInsets.right,
+					sum(rowsSizesEffective, vgap) + parentInsets.top + parentInsets.bottom);
 
 			return ret;
 		}
 	}
 
-	private int getWeightedSizeCount(int[] sizesTypes) {
+	private int sum(int[] ints, int gap) {
 		int ret = 0;
-		for (int i = 0; i < sizesTypes.length; i++) {
-			if (sizesTypes[i] == SIZE_TYPE_WEIGHTED) {
-				ret++;
-			}
+		for (int i : ints) {
+			ret += i;
+		}
+		if (gap > 0) {
+			ret += gap * (ints.length - 1);
 		}
 		return ret;
 	}
@@ -229,11 +222,12 @@ public class SgLayout implements LayoutManager2 {
 			// for dynamically
 			int[] colsSizesEffective = new int[cols];
 			int[] rowsSizesEffective = new int[rows];
-			Dimension reqConstSize = calculateEffectiveSizes1stPass(colsSizesEffective, rowsSizesEffective);
-			if (availWidth < reqConstSize.width || availHeight < reqConstSize.height) {
+			calcConstColSizes(colsSizesEffective, preferredWidth);
+			calcConstRowSizes(rowsSizesEffective, preferredHeight);
+			if (availWidth < sum(colsSizesEffective, hgap) || availHeight < sum(rowsSizesEffective, vgap)) {
+				log.warn("Returning MINIMUM layout size");
 				return minimumLayoutSize(parent);
 			}
-
 			return new Dimension(availWidth, availHeight);
 		}
 	}
@@ -253,79 +247,90 @@ public class SgLayout implements LayoutManager2 {
 		synchronized (parent.getTreeLock()) {
 			// See how much space we have for our rendering
 			Insets parentInsets = parent.getInsets();
-			int availWidth = parent.getWidth() - (parentInsets.left + parentInsets.right);
-			int availHeight = parent.getHeight() - (parentInsets.top + parentInsets.bottom);
 
-			// See how much space is for constantly sized components and which
-			// for dynamically
-			int[] colsSizesEffective = new int[cols];
-			int[] rowsSizesEffective = new int[rows];
-			Dimension reqConstSize = calculateEffectiveSizes1stPass(colsSizesEffective, rowsSizesEffective);
-			if (availWidth < reqConstSize.width || availHeight < reqConstSize.height) {
-				// refuse to relayout if not enough space
+			// Process columns sizes
+			int availWidth = parent.getWidth() - (parentInsets.left + parentInsets.right);
+			int[] colsSizesEffective = calculateEffectiveColSizesForLayout(availWidth);
+			if (colsSizesEffective == null) {
 				return;
 			}
 
-			Dimension dynaSpaceAvaialble = new Dimension(availWidth - reqConstSize.width,
-					availHeight - reqConstSize.height);
-			calculcateEffectiveSizes2ndPass(dynaSpaceAvaialble, colsSizesEffective, rowsSizesEffective);
-
-			// if (log.isDebugEnabled()) {
-			// log.debug("Parent insets: " + parentInsets);
-			// log.debug("Cols sizes: " + Arrays.toString(colsSizesEffective));
-			// log.debug("Rows sizes: " + Arrays.toString(rowsSizesEffective));
-			// }
-
-			for (Entry<Component, SmartGridLayoutConstraints> entry : components.entrySet()) {
-				SmartGridLayoutConstraints c = entry.getValue();
-
-				int left = (c.col > 0 ? hgap : 0) + parentInsets.left;
-				int top = (c.row > 0 ? vgap : 0) + parentInsets.top;
-				for (int idxCol = 0; idxCol < c.col; idxCol++) {
-					left += colsSizesEffective[idxCol];
-				}
-				for (int idxRow = 0; idxRow < c.row; idxRow++) {
-					top += rowsSizesEffective[idxRow];
-				}
-
-				int width = 0;
-				int height = 0;
-				for (int idxCol = c.col; idxCol < c.colspan + c.col; idxCol++) {
-					width += colsSizesEffective[idxCol];
-				}
-				if (c.col > 0) {
-					width -= hgap;
-				}
-
-				for (int idxRow = c.row; idxRow < c.rowspan + c.row; idxRow++) {
-					height += rowsSizesEffective[idxRow];
-				}
-				if (c.row > 0) {
-					height -= vgap;
-				}
-
-				Component comp = entry.getKey();
-				comp.setSize(width, height);
-				comp.setBounds(left, top, width, height);
-
-				// log.warn("Comp(" + c.col + ", " + c.row + ", " + c.colspan +
-				// ", " + c.rowspan + ") positioned at "
-				// + left + "," + top + "," + width + "," + height +
-				// ". Actual width: " + comp.getWidth());
+			// Process rows sizes
+			int availHeight = parent.getHeight() - (parentInsets.top + parentInsets.bottom);
+			int[] rowsSizesEffective = calculateEffectiveRowsSizesForLayout(availHeight);
+			if (rowsSizesEffective == null) {
+				return;
 			}
+
+			// Place controls to their places
+			positionComponents(parentInsets, colsSizesEffective, rowsSizesEffective);
 		}
 	}
 
-	private void calculcateEffectiveSizes2ndPass(Dimension dynaSpaceAvaialble, int[] colsSizesEffective,
-			int[] rowsSizesEffective) {
-		calculateWeightedSizes(colsSizes, colsSizesTypes, dynaSpaceAvaialble.width, colsSizesEffective, hgap);
-		calculateWeightedSizes(rowsSizes, rowsSizesTypes, dynaSpaceAvaialble.height, rowsSizesEffective, vgap);
+	private int[] calculateEffectiveRowsSizesForLayout(int availHeight) {
+		int[] rowsSizesEffective = new int[rows];
+		int constHeight = calcConstRowSizes(rowsSizesEffective, preferredHeight);
+		if (availHeight < sum(rowsSizesEffective, vgap)) {
+			log.debug("AvailHeight less than poreferred. Returning min height");
+			calcConstRowSizes(rowsSizesEffective, minimumHeight);
+			return rowsSizesEffective;
+		}
+		calculateWeightedSizes(rowsSizes, rowsSizesTypes, availHeight - constHeight, rowsSizesEffective, vgap);
+		return rowsSizesEffective;
+	}
+
+	private int[] calculateEffectiveColSizesForLayout(int availWidth) {
+		int[] colsSizesEffective = new int[cols];
+		int constWidth = calcConstColSizes(colsSizesEffective, preferredWidth);
+		if (availWidth < sum(colsSizesEffective, hgap)) {
+			log.debug("AvailWidth less than poreferred. Returning min width");
+			calcConstRowSizes(colsSizesEffective, minimumWidth);
+			return colsSizesEffective;
+		}
+		calculateWeightedSizes(colsSizes, colsSizesTypes, availWidth - constWidth, colsSizesEffective, hgap);
+		updateComponentsWidths(colsSizesEffective);
+		return colsSizesEffective;
+	}
+
+	private void positionComponents(Insets parentInsets, int[] colsSizesEffective, int[] rowsSizesEffective) {
+		for (Entry<Component, SmartGridLayoutConstraints> entry : components.entrySet()) {
+			SmartGridLayoutConstraints c = entry.getValue();
+
+			int left = (c.col > 0 ? hgap : 0) + parentInsets.left;
+			int top = (c.row > 0 ? vgap : 0) + parentInsets.top;
+			for (int idxCol = 0; idxCol < c.col; idxCol++) {
+				left += colsSizesEffective[idxCol];
+			}
+			for (int idxRow = 0; idxRow < c.row; idxRow++) {
+				top += rowsSizesEffective[idxRow];
+			}
+
+			int width = 0;
+			int height = 0;
+			for (int idxCol = c.col; idxCol < c.colspan + c.col; idxCol++) {
+				width += colsSizesEffective[idxCol];
+			}
+			if (c.col > 0) {
+				width -= hgap;
+			}
+
+			for (int idxRow = c.row; idxRow < c.rowspan + c.row; idxRow++) {
+				height += rowsSizesEffective[idxRow];
+			}
+			if (c.row > 0) {
+				height -= vgap;
+			}
+
+			Component comp = entry.getKey();
+			// comp.setSize(width, height);
+			comp.setBounds(left, top, width, height);
+		}
 	}
 
 	/**
 	 * Calculate effective cols and rows sizes which hase dynamic sizes
 	 * 
-	 * @param srcArray
+	 * @param sizes
 	 * @param sizesTypes
 	 * @param dynaSpace
 	 *            space which is dynamically available and is to be distributed
@@ -334,99 +339,130 @@ public class SgLayout implements LayoutManager2 {
 	 *            gap size for this direction
 	 * @return
 	 */
-	private static void calculateWeightedSizes(int[] srcArray, int[] sizesTypes, int dynaSpace, int[] dstArray,
+	private static void calculateWeightedSizes(int[] sizes, int[] sizesTypes, int dynaSpace, int[] dstArray,
 			int gapSize) {
 		double dynaSpaceD = (double) dynaSpace;
 		double weightsSumm = 0;
-		for (int i = 0; i < srcArray.length; i++) {
+		for (int i = 0; i < sizes.length; i++) {
 			if (sizesTypes[i] == SIZE_TYPE_WEIGHTED) {
-				weightsSumm += srcArray[i];
+				weightsSumm += sizes[i];
 			}
 		}
 
-		for (int i = 0; i < srcArray.length; i++) {
+		for (int i = 0; i < sizes.length; i++) {
 			if (sizesTypes[i] == SIZE_TYPE_WEIGHTED) {
-				dstArray[i] = (int) (dynaSpaceD * ((double) srcArray[i]) / weightsSumm) + (i > 0 ? gapSize : 0);
+				dstArray[i] = (int) (dynaSpaceD * ((double) sizes[i]) / weightsSumm) + (i > 0 ? gapSize : 0);
 			}
 		}
 	}
 
-	/**
-	 * Does two things:
-	 * 
-	 * - Calculates constant part of the size
-	 * 
-	 * - Calculates effective final size for cols and rows which has constant
-	 * sizes
-	 * 
-	 * @return total requested constant size required for this layout, including
-	 *         layouts
-	 */
-	private Dimension calculateEffectiveSizes1stPass(int[] effectiveColsSizesToPopulate,
-			int[] effectiveRowsSizesToPopulate) {
-		int width = getHGapTotalSize();
-		int height = getVGapTotalSize();
+	private void updateComponentsWidths(int[] colsSizesEffective) {
+		for (Entry<Component, SmartGridLayoutConstraints> entry : components.entrySet()) {
+			SmartGridLayoutConstraints c = entry.getValue();
 
-		for (int idxCol = 0; idxCol < cols; idxCol++) {
-			if (colsSizesTypes[idxCol] == SIZE_TYPE_CONSTANT) {
-				width += colsSizes[idxCol];
-				effectiveColsSizesToPopulate[idxCol] = colsSizes[idxCol] + (idxCol > 0 ? hgap : 0);
-			} else if (colsSizesTypes[idxCol] == SIZE_TYPE_ASKCOMPONENT) {
-				int addedWidth = 0;
-				for (int idxRow = 0; idxRow < rows; idxRow++) {
-					Component comp = findComponentAt(idxCol, idxRow);
-					if (comp == null) {
-						continue;
-					}
-					SmartGridLayoutConstraints c = components.get(comp);
-					if (c.colspan > 1) {
-						continue;
-					}
-					Dimension compSize = getComponentPreferredSize(comp);
-					if (compSize.getWidth() > addedWidth) {
-						addedWidth = (int) compSize.getWidth();
-					}
-				}
-				if (addedWidth == 0) {
-					log.warn("calculateRequestedConstSize(), colIdx " + idxCol
-							+ " :: addedWidth is 0, which is not good");
-				}
-				width += addedWidth;
-				effectiveColsSizesToPopulate[idxCol] = addedWidth + (idxCol > 0 ? hgap : 0);
+			int width = 0;
+			for (int idxCol = c.col; idxCol < c.colspan + c.col; idxCol++) {
+				width += colsSizesEffective[idxCol];
+			}
+			if (c.col > 0) {
+				width -= hgap;
 			}
 
+			Component comp = entry.getKey();
+			comp.setSize(width, comp.getHeight());
 		}
+	}
 
+	/**
+	 * Returns sum of non-weighted sizes
+	 * 
+	 * @param askComponent
+	 *            what size to get when asking component
+	 */
+	private int calcConstRowSizes(int[] effectiveRowsSizesToPopulate, SizeResolver askComponent) {
+		int height = getVGapTotalSize();
 		for (int idxRow = 0; idxRow < rows; idxRow++) {
 			if (rowsSizesTypes[idxRow] == SIZE_TYPE_CONSTANT) {
 				height += rowsSizes[idxRow];
 				effectiveRowsSizesToPopulate[idxRow] = rowsSizes[idxRow] + (idxRow > 0 ? vgap : 0);
 			} else if (rowsSizesTypes[idxRow] == SIZE_TYPE_ASKCOMPONENT) {
-				int addedHeight = 0;
-				for (int idxCol = 0; idxCol < cols; idxCol++) {
-					Component comp = findComponentAt(idxCol, idxRow);
-					if (comp == null) {
-						continue;
-					}
-					SmartGridLayoutConstraints c = components.get(comp);
-					if (c.rowspan > 1) {
-						continue;
-					}
-					Dimension compSize = getComponentPreferredSize(comp);
-					if (compSize.getHeight() > addedHeight) {
-						addedHeight = (int) compSize.getHeight();
-					}
-				}
-				if (addedHeight == 0) {
-					log.warn("calculateRequestedConstSize(), rowIdx " + idxRow
-							+ " :: addedHeight is 0, which is not good");
-				}
+				int addedHeight = findMaxHeightWithinRow(idxRow, askComponent);
 				height += addedHeight;
+				effectiveRowsSizesToPopulate[idxRow] = addedHeight + (idxRow > 0 ? vgap : 0);
+			} else if (rowsSizesTypes[idxRow] == SIZE_TYPE_WEIGHTED) {
+				int addedHeight = findMaxHeightWithinRow(idxRow, minimumHeight);
 				effectiveRowsSizesToPopulate[idxRow] = addedHeight + (idxRow > 0 ? vgap : 0);
 			}
 		}
+		return height;
+	}
 
-		return new Dimension(width, height);
+	private int findMaxHeightWithinRow(int idxRow, SizeResolver sizeResolver) {
+		int addedHeight = 0;
+		for (int idxCol = 0; idxCol < cols; idxCol++) {
+			Component comp = findComponentAt(idxCol, idxRow);
+			if (comp == null) {
+				continue;
+			}
+			SmartGridLayoutConstraints c = components.get(comp);
+			if (c.rowspan > 1) {
+				continue;
+			}
+			int compHeight = sizeResolver.get(comp);
+			if (compHeight > addedHeight) {
+				addedHeight = compHeight;
+			}
+		}
+		if (addedHeight == 0) {
+			log.warn("findMaxHeightWithinRow(), rowIdx " + idxRow + " :: addedHeight is 0, which is not good");
+		}
+		return addedHeight;
+	}
+
+	/**
+	 * Returns sum of non-weighted sizes
+	 * 
+	 * @param askComponent
+	 *            what size to get when asking component
+	 */
+	private int calcConstColSizes(int[] effectiveColsSizesToPopulate, SizeResolver askComponent) {
+		int width = getHGapTotalSize();
+		for (int idxCol = 0; idxCol < cols; idxCol++) {
+			if (colsSizesTypes[idxCol] == SIZE_TYPE_CONSTANT) {
+				width += colsSizes[idxCol];
+				effectiveColsSizesToPopulate[idxCol] = colsSizes[idxCol] + (idxCol > 0 ? hgap : 0);
+			} else if (colsSizesTypes[idxCol] == SIZE_TYPE_ASKCOMPONENT) {
+				int addedWidth = findMaxWidthWithinColumn(idxCol, askComponent);
+				width += addedWidth;
+				effectiveColsSizesToPopulate[idxCol] = addedWidth + (idxCol > 0 ? hgap : 0);
+			} else if (colsSizesTypes[idxCol] == SIZE_TYPE_WEIGHTED) {
+				int addedWidth = findMaxWidthWithinColumn(idxCol, minimumWidth);
+				effectiveColsSizesToPopulate[idxCol] = addedWidth + (idxCol > 0 ? hgap : 0);
+			}
+		}
+		return width;
+	}
+
+	private int findMaxWidthWithinColumn(int idxCol, SizeResolver sizeResolver) {
+		int addedWidth = 0;
+		for (int idxRow = 0; idxRow < rows; idxRow++) {
+			Component comp = findComponentAt(idxCol, idxRow);
+			if (comp == null) {
+				continue;
+			}
+			SmartGridLayoutConstraints c = components.get(comp);
+			if (c.colspan > 1) {
+				continue;
+			}
+			int compWidth = sizeResolver.get(comp);
+			if (compWidth > addedWidth) {
+				addedWidth = compWidth;
+			}
+		}
+		if (addedWidth == 0) {
+			log.warn("findMaxWidthWithinColumn(), colIdx " + idxCol + " :: addedWidth is 0, which is not good");
+		}
+		return addedWidth;
 	}
 
 	@Override
@@ -439,4 +475,35 @@ public class SgLayout implements LayoutManager2 {
 		return 0.5f;
 	}
 
+	public static interface SizeResolver {
+		int get(Component c);
+	}
+
+	public static SizeResolver preferredWidth = new SizeResolver() {
+		@Override
+		public int get(Component c) {
+			return c.getPreferredSize().width;
+		}
+	};
+
+	public static SizeResolver preferredHeight = new SizeResolver() {
+		@Override
+		public int get(Component c) {
+			return c.getPreferredSize().height;
+		}
+	};
+
+	public static SizeResolver minimumWidth = new SizeResolver() {
+		@Override
+		public int get(Component c) {
+			return c.getMinimumSize().width;
+		}
+	};
+
+	public static SizeResolver minimumHeight = new SizeResolver() {
+		@Override
+		public int get(Component c) {
+			return c.getMinimumSize().height;
+		}
+	};
 }
