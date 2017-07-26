@@ -4,7 +4,7 @@
 
 	<groupId>com.github.skarpushin</groupId>
 	<artifactId>swingpm</artifactId>
-	<version>1.6.0</version>
+	<version>1.6.1</version>
 	<packaging>jar</packaging>
 
 	<name>swingpm</name>
@@ -28,10 +28,8 @@
 	</licenses>
 
 	<properties>
-		<!-- github server corresponds to entry in ~/.m2/settings.xml -->
-		<github.global.server>github</github.global.server>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.debug>true</maven.compiler.debug>
 		<maven.compiler.debuglevel>lines,vars,source</maven.compiler.debuglevel>
 	</properties>
