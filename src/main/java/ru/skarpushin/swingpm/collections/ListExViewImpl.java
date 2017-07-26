@@ -8,18 +8,16 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 /**
- * ListExImpl<T> impl which implements view capabilities. It allows to see list
- * but not change it. While this view is atached to parent it will propagate
- * parents events.
+ * Sub-class of {@link ListExImpl} impl which implements view capabilities. It
+ * allows to see list but not change it. While this view is atached to parent it
+ * will propagate parents events.
  * 
  * Order of items in this view is not maintained and most likely will not be the
  * same as order of items in parent list
  * 
  * @author sergey.karpushin
- * 
- * @param <T>
  */
-public class ListExViewImpl<T> extends ListExImpl<T>implements ListExView<T>, ListExEventListener<T> {
+public class ListExViewImpl<T> extends ListExImpl<T> implements ListExView<T>, ListExEventListener<T> {
 	private static final String NOT_SUPPORTED_FOR_READONLY_LIST = "Not supported for readonly list";
 	private final FilterPredicate<T> filterPredicate;
 	private ListEx<T> parentList;
