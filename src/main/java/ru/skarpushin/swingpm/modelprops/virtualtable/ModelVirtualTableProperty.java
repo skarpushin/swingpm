@@ -21,10 +21,10 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
 import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
 
 /**
- * Model contain not a sequential list of records, but collection of pages with
- * possible gaps. i.e. it can contain data for rows 0-99,1000-1099, but data for
- * 100-999 might be not loaded into this model. This data might be loaded later
- * as user scroll table.
+ * Model contain not a sequential list of records, but a collection of pages
+ * with possible gaps. i.e. it can contain data for rows 0-99,1000-1099, but
+ * data for 100-999 might be not loaded into this model. This data might be
+ * loaded later as user scroll table.
  * 
  * @param <E>
  *            type of data displayed in table
@@ -298,8 +298,7 @@ public class ModelVirtualTableProperty<E> extends ModelProperty<E> {
 	 * 
 	 * @param e
 	 *            the event to be forwarded
-	 * 
-	 * @see #addTableModelListener
+	 *
 	 * @see TableModelEvent
 	 * @see EventListenerList
 	 */

@@ -16,7 +16,6 @@ public interface LightweightTableModel<E> {
 	 * default.
 	 * 
 	 * @return the number of columns in the model
-	 * @see #getRowCount
 	 */
 	public int getColumnCount();
 

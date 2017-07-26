@@ -5,7 +5,7 @@ import ru.skarpushin.swingpm.tools.edt.EdtInvoker;
 
 /**
  * Responsible for async data loading and updating model with it (have to be in
- * sync with what DataChangeListener does)
+ * sync with what {@link DataChangeListenerNoImpl} does)
  */
 public abstract class AsyncDataLoader<E> {
 	protected ModelVirtualTableProperty<E> modelVirtualTableProperty;

@@ -367,12 +367,9 @@ public class SgLayout implements LayoutManager2 {
 	/**
 	 * Calculate effective cols and rows sizes which hase dynamic sizes
 	 * 
-	 * @param sizes
-	 * @param sizesTypes
 	 * @param dynaSpace
 	 *            space which is dynamically available and is to be distributed
 	 *            between dynamically sized components
-	 * @return
 	 */
 	private static void calculateWeightedSizes(int[] sizes, int[] sizesTypes, int dynaSpace, int[] dstArray) {
 		double dynaSpaceD = (double) dynaSpace;

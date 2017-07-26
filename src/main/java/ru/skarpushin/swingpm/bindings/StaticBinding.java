@@ -23,7 +23,7 @@ public class StaticBinding {
 	/**
 	 * @deprecated avoid using this approach cause it uses hard coded literal of
 	 *             target method name. Use
-	 *             {@link #registerOnChangeHandler(ModelPropertyAccessor, PropertyChangeListener)}
+	 *             {@link #registerOnChangeHandler(ModelPropertyAccessor, TypedPropertyChangeListener)}
 	 *             instead
 	 */
 	@Deprecated
@@ -77,11 +77,6 @@ public class StaticBinding {
 	/**
 	 * Register one way property propagation. If property will change, it's
 	 * value will be propagated to target
-	 * 
-	 * @param editConnectionEnabled
-	 * @param actionEditConnection
-	 * @param string
-	 * @return
 	 */
 	public static <E> Binding registerPropertyValuePropagation(ModelPropertyAccessor<E> property, Object targetObject,
 			String targetProperty) {

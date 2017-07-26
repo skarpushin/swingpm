@@ -7,15 +7,11 @@ public interface ModelMultSelInListPropertyAccessor<E> extends HasListExEvents<E
 	/**
 	 * Return all optionsAccessor we can choose from. Normally used to populate
 	 * list
-	 * 
-	 * @return
 	 */
 	ModelListPropertyAccessor<E> getOptions();
 
 	/**
 	 * Return managed list accessor which holds selection stateId
-	 * 
-	 * @return
 	 */
 	ModelListPropertyAccessor<E> getSelectionAccessor();
 

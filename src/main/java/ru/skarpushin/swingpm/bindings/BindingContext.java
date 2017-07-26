@@ -30,7 +30,7 @@ public class BindingContext {
 	/**
 	 * @deprecated avoid using this approach cause it uses hard coded literal of
 	 *             target method name. Use
-	 *             {@link #registerOnChangeHandler(ModelPropertyAccessor, PropertyChangeListener)}
+	 *             {@link #registerOnChangeHandler(ModelPropertyAccessor, TypedPropertyChangeListener)}
 	 *             instead
 	 */
 	@Deprecated

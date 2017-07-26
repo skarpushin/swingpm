@@ -181,7 +181,6 @@ public class ModelTableProperty<E> extends ModelProperty<E>implements ListExEven
 	 * @param e
 	 *            the event to be forwarded
 	 * 
-	 * @see #addTableModelListener
 	 * @see TableModelEvent
 	 * @see EventListenerList
 	 */
