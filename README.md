@@ -6,7 +6,7 @@ It's not meant to be the reference one and the only implementation. What it is m
 It's prooved itself to be convenient to use in multiple projects. 
 
 Here're couple known examples:
-* TimeSheet Tool (closed source): http://www.eftracker.ru/articles/download
+* TimeSheet Tool (closed source): https://www.eftracker.ru/articles/download
 * PGP Vault: https://github.com/skarpushin/pgpvault. 
 
 Please let me know if you willing to share other examples.
