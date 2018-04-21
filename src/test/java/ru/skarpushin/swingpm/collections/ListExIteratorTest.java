@@ -11,9 +11,6 @@ import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
-import ru.skarpushin.swingpm.collections.ListEx;
-import ru.skarpushin.swingpm.collections.ListExImpl;
-
 public class ListExIteratorTest {
 	@Test
 	public void testIterations_expectOkForCommonOperations() {

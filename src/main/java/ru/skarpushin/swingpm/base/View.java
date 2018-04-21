@@ -13,8 +13,8 @@ public interface View<TPM> extends Detachable {
 	 * @param target
 	 *            assuming it's null, Containrt or Window or Frame
 	 * @param constraints
-	 *            constaraints for case when view is a component added to panel
-	 *            or other component
+	 *            constaraints for case when view is a component added to panel or
+	 *            other component
 	 */
 	void renderTo(Container target, Object constraints);
 

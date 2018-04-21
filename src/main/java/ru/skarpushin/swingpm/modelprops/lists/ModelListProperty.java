@@ -24,7 +24,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapter;
  * 
  * @param <E>
  */
-public class ModelListProperty<E> extends ModelProperty<List<E>>implements ListExEventListener<E> {
+public class ModelListProperty<E> extends ModelProperty<List<E>> implements ListExEventListener<E> {
 	protected final ListExBase<E> list;
 	protected EventListenerList listenerList = new EventListenerList();
 	private ModelListPropertyAccessor<E> modelListPropertyAccessor;

@@ -29,8 +29,8 @@ public class PresentationModelBase implements PresentationModel {
 	}
 
 	/**
-	 * Search registered views for registered Window. Normally this is will be
-	 * used as a parent for modal dialog
+	 * Search registered views for registered Window. Normally this is will be used
+	 * as a parent for modal dialog
 	 */
 	protected Window findRegisteredWindowIfAny() {
 		for (View<?> view : views) {

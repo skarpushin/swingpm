@@ -12,6 +12,7 @@ import com.google.common.base.Preconditions;
 
 import ru.skarpushin.swingpm.modelprops.lists.ModelSelInComboBoxPropertyAccessor;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class ModelSelInListBinding implements Binding, ListDataListener, ListSelectionListener {
 	private final ModelSelInComboBoxPropertyAccessor<?> model;
 	private JList list;

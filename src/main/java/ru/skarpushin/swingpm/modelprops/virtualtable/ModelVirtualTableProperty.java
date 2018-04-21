@@ -216,6 +216,7 @@ public class ModelVirtualTableProperty<E> extends ModelProperty<E> {
 				TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT));
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void replaceCurrentDataWith(PaginatedList<E> firstPage, PaginatedList<E> optionalCurrentPage) {
 		log.debug("replaceCurrentDataWith(): " + firstPage + ", " + optionalCurrentPage);
 
@@ -292,9 +293,8 @@ public class ModelVirtualTableProperty<E> extends ModelProperty<E> {
 	}
 
 	/**
-	 * Forwards the given notification event to all
-	 * <code>TableModelListeners</code> that registered themselves as listeners
-	 * for this table model.
+	 * Forwards the given notification event to all <code>TableModelListeners</code>
+	 * that registered themselves as listeners for this table model.
 	 * 
 	 * @param e
 	 *            the event to be forwarded

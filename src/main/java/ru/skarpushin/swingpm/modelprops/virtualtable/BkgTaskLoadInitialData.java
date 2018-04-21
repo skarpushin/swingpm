@@ -3,7 +3,7 @@ package ru.skarpushin.swingpm.modelprops.virtualtable;
 import org.summerb.approaches.jdbccrud.api.dto.PagerParams;
 import org.summerb.approaches.jdbccrud.api.dto.PaginatedList;
 
-public class BkgTaskLoadInitialData<E> extends BkgTask<E>implements Runnable {
+public class BkgTaskLoadInitialData<E> extends BkgTask<E> implements Runnable {
 	private PaginatedList<E> firstPage;
 
 	public BkgTaskLoadInitialData(AsyncDataLoaderImpl<E> loader, Object statusId) {

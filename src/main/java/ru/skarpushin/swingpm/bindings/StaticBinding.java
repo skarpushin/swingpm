@@ -1,6 +1,5 @@
 package ru.skarpushin.swingpm.bindings;
 
-import java.beans.PropertyChangeListener;
 import java.lang.reflect.Method;
 
 import javax.swing.text.Document;
@@ -75,8 +74,8 @@ public class StaticBinding {
 	}
 
 	/**
-	 * Register one way property propagation. If property will change, it's
-	 * value will be propagated to target
+	 * Register one way property propagation. If property will change, it's value
+	 * will be propagated to target
 	 */
 	public static <E> Binding registerPropertyValuePropagation(ModelPropertyAccessor<E> property, Object targetObject,
 			String targetProperty) {

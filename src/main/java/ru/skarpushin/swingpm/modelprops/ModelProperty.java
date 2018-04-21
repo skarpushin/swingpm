@@ -61,8 +61,8 @@ public class ModelProperty<E> implements FilterPredicate<ValidationError> {
 	 * Intended to be used by property owner to set property value
 	 * 
 	 * @param value
-	 * @return true if value was updated, false if value left unchanged (no
-	 *         events fired)
+	 * @return true if value was updated, false if value left unchanged (no events
+	 *         fired)
 	 */
 	public boolean setValueByOwner(E value) {
 		E oldValue = valueAdapter.getValue();
@@ -76,14 +76,14 @@ public class ModelProperty<E> implements FilterPredicate<ValidationError> {
 	}
 
 	/**
-	 * Intended to be overridden to handle changes came from consumer (normally
-	 * - UI layer)
+	 * Intended to be overridden to handle changes came from consumer (normally - UI
+	 * layer)
 	 * 
 	 * @param value
-	 * @return true if value was updated, false if value left unchanged (no
-	 *         events fired)
-	 * @deprecated USE IT ONLY FROM CLASS WHICH OWNS THIS PROPERTY!!! Not
-	 *             actually deprecated, want to avoid misuse.
+	 * @return true if value was updated, false if value left unchanged (no events
+	 *         fired)
+	 * @deprecated USE IT ONLY FROM CLASS WHICH OWNS THIS PROPERTY!!! Not actually
+	 *             deprecated, want to avoid misuse.
 	 */
 	@Deprecated
 	public boolean setValueByConsumer(E value) {

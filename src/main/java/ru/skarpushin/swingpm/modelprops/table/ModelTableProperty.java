@@ -27,7 +27,7 @@ import ru.skarpushin.swingpm.valueadapters.ValueAdapterHolderImpl;
  * @param <E>
  *            contained data type
  */
-public class ModelTableProperty<E> extends ModelProperty<E>implements ListExEventListener<E> {
+public class ModelTableProperty<E> extends ModelProperty<E> implements ListExEventListener<E> {
 	private final LightweightTableModel<E> lightweightTableModel;
 	private final ListExBase<E> list;
 
@@ -174,9 +174,8 @@ public class ModelTableProperty<E> extends ModelProperty<E>implements ListExEven
 	}
 
 	/**
-	 * Forwards the given notification event to all
-	 * <code>TableModelListeners</code> that registered themselves as listeners
-	 * for this table model.
+	 * Forwards the given notification event to all <code>TableModelListeners</code>
+	 * that registered themselves as listeners for this table model.
 	 * 
 	 * @param e
 	 *            the event to be forwarded

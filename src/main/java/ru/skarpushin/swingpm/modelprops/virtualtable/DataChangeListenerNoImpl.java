@@ -19,8 +19,7 @@ public class DataChangeListenerNoImpl<E> {
 	 * Impl must call it when one row change is detected.
 	 * 
 	 * @param row
-	 *            new version of row which is eligible for display and was
-	 *            changed)
+	 *            new version of row which is eligible for display and was changed)
 	 */
 	public void triggerRowChanged(E row) {
 		if (!asyncDataLoader.getVirtualTableDataSource().isSuitable(row)) {

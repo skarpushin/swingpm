@@ -10,6 +10,7 @@ import com.google.common.base.Preconditions;
 import ru.skarpushin.swingpm.collections.ListExEventListener;
 import ru.skarpushin.swingpm.modelprops.lists.ModelMultSelInListPropertyAccessor;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class ModelMultSelInListBinding<E> implements Binding, ListSelectionListener, ListExEventListener<E> {
 	// private static Logger log =
 	// Logger.getLogger(ModelMultSelInListBinding.class);

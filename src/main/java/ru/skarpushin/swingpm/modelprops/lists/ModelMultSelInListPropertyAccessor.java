@@ -5,8 +5,7 @@ import ru.skarpushin.swingpm.collections.HasListExEvents;
 
 public interface ModelMultSelInListPropertyAccessor<E> extends HasListExEvents<E>, HasValidationErrorsListEx {
 	/**
-	 * Return all optionsAccessor we can choose from. Normally used to populate
-	 * list
+	 * Return all optionsAccessor we can choose from. Normally used to populate list
 	 */
 	ModelListPropertyAccessor<E> getOptions();
 

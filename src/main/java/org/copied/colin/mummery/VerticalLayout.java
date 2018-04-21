@@ -44,19 +44,19 @@ public class VerticalLayout implements LayoutManager {
 	 */
 	public final static int LEFT = 2;
 	/**
-	 * The horizontal alignment constant that designates stretching the
-	 * component horizontally.
+	 * The horizontal alignment constant that designates stretching the component
+	 * horizontally.
 	 */
 	public final static int BOTH = 3;
 
 	/**
-	 * The anchoring constant that designates anchoring to the top of the
-	 * display area
+	 * The anchoring constant that designates anchoring to the top of the display
+	 * area
 	 */
 	public final static int TOP = 1;
 	/**
-	 * The anchoring constant that designates anchoring to the bottom of the
-	 * display area
+	 * The anchoring constant that designates anchoring to the bottom of the display
+	 * area
 	 */
 	public final static int BOTTOM = 2;
 	private int vgap; // the vertical vgap between components...defaults to 5
@@ -67,32 +67,30 @@ public class VerticalLayout implements LayoutManager {
 
 	// Constructors
 	/**
-	 * Constructs an instance of VerticalLayout with a vertical vgap of 5
-	 * pixels, horizontal centering and anchored to the top of the display area.
+	 * Constructs an instance of VerticalLayout with a vertical vgap of 5 pixels,
+	 * horizontal centering and anchored to the top of the display area.
 	 */
 	public VerticalLayout() {
 		this(5, CENTER, TOP);
 	}
 
 	/**
-	 * Constructs a VerticalLayout instance with horizontal centering, anchored
-	 * to the top with the specified vgap
+	 * Constructs a VerticalLayout instance with horizontal centering, anchored to
+	 * the top with the specified vgap
 	 * 
 	 * @param vgap
-	 *            An int value indicating the vertical seperation of the
-	 *            components
+	 *            An int value indicating the vertical seperation of the components
 	 */
 	public VerticalLayout(int vgap) {
 		this(vgap, CENTER, TOP);
 	}
 
 	/**
-	 * Constructs a VerticalLayout instance anchored to the top with the
-	 * specified vgap and horizontal alignment
+	 * Constructs a VerticalLayout instance anchored to the top with the specified
+	 * vgap and horizontal alignment
 	 * 
 	 * @param vgap
-	 *            An int value indicating the vertical seperation of the
-	 *            components
+	 *            An int value indicating the vertical seperation of the components
 	 * @param alignment
 	 *            An int value which is one of
 	 *            <code>RIGHT, LEFT, CENTER, BOTH</code> for the horizontal
@@ -107,16 +105,15 @@ public class VerticalLayout implements LayoutManager {
 	 * alignment and anchoring
 	 * 
 	 * @param vgap
-	 *            An int value indicating the vertical seperation of the
-	 *            components
+	 *            An int value indicating the vertical seperation of the components
 	 * @param alignment
 	 *            An int value which is one of
 	 *            <code>RIGHT, LEFT, CENTER, BOTH</code> for the horizontal
 	 *            alignment.
 	 * @param anchor
 	 *            An int value which is one of <code>TOP, BOTTOM, CENTER</code>
-	 *            indicating where the components are to appear if the display
-	 *            area exceeds the minimum necessary.
+	 *            indicating where the components are to appear if the display area
+	 *            exceeds the minimum necessary.
 	 */
 	public VerticalLayout(int vgap, int alignment, int anchor) {
 		this.vgap = vgap;

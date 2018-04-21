@@ -5,8 +5,8 @@ package ru.skarpushin.swingpm.modelprops.virtualtable;
  */
 public interface RowRetrieverFeedbackHandler {
 	/**
-	 * NOTE for Impl: It must be blazing fast since this method called while
-	 * table requesting for new data to be rendered
+	 * NOTE for Impl: It must be blazing fast since this method called while table
+	 * requesting for new data to be rendered
 	 */
 	void handleRowRequested(int rowIndex, boolean isDataFound);
 }
