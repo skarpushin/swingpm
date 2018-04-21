@@ -2,9 +2,8 @@ package ru.skarpushin.swingpm.base;
 
 import java.awt.Container;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.InitializingBean;
 
 import ru.skarpushin.swingpm.bindings.BindingContext;
 import ru.skarpushin.swingpm.tools.SwingPmSettings;
@@ -17,20 +16,14 @@ import ru.skarpushin.swingpm.tools.edt.Edt;
  *            PresentationModel type
  * @author sergeyk
  */
-public abstract class ViewBase<TPM extends PresentationModel> implements View<TPM> {
+public abstract class ViewBase<TPM extends PresentationModel> implements View<TPM>, InitializingBean {
 	protected static Logger log = Logger.getLogger(ViewBase.class);
 
 	protected TPM pm;
 	protected BindingContext bindingContext;
 
-	/**
-	 * This annotation is here by intention. Method {@link #initComponents()}
-	 * must be called after all properties of class set. When used in Spring
-	 * context it will take same effect as Spring's
-	 * org.springframework.beans.factory.InitializingBean
-	 */
-	@PostConstruct
-	public void initComponents() {
+	@Override
+	public void afterPropertiesSet() throws Exception {
 		Edt.invokeOnEdtAsync(initComponentsRunnable);
 	}
 
