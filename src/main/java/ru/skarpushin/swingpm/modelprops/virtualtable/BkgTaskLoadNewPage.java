@@ -1,7 +1,7 @@
 package ru.skarpushin.swingpm.modelprops.virtualtable;
 
-import org.summerb.approaches.jdbccrud.api.dto.PagerParams;
-import org.summerb.approaches.jdbccrud.api.dto.PaginatedList;
+import org.summerb.easycrud.api.dto.PagerParams;
+import org.summerb.easycrud.api.dto.PaginatedList;
 
 public class BkgTaskLoadNewPage<E> extends BkgTask<E> implements Runnable, HasPageIdx {
 

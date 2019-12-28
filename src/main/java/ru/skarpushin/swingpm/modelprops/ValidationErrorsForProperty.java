@@ -1,6 +1,6 @@
 package ru.skarpushin.swingpm.modelprops;
 
-import org.summerb.approaches.validation.ValidationError;
+import org.summerb.validation.ValidationError;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

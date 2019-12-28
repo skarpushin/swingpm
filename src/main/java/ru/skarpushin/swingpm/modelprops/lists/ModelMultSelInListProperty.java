@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.summerb.approaches.validation.ValidationError;
+import org.summerb.validation.ValidationError;
 
 import ru.skarpushin.swingpm.collections.ListEx;
 import ru.skarpushin.swingpm.collections.ListExEventListener;

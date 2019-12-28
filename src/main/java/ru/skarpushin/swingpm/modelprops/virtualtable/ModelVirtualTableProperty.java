@@ -8,8 +8,8 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import org.apache.log4j.Logger;
-import org.summerb.approaches.jdbccrud.api.dto.PaginatedList;
-import org.summerb.approaches.validation.ValidationError;
+import org.summerb.easycrud.api.dto.PaginatedList;
+import org.summerb.validation.ValidationError;
 
 import com.google.common.base.Preconditions;
 

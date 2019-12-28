@@ -6,7 +6,7 @@ import javax.swing.event.EventListenerList;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-import org.summerb.approaches.validation.ValidationError;
+import org.summerb.validation.ValidationError;
 
 import com.google.common.base.Preconditions;
 

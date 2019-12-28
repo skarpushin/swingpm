@@ -2,7 +2,7 @@ package ru.skarpushin.swingpm.modelprops.lists;
 
 import javax.swing.event.ListDataListener;
 
-import org.summerb.approaches.validation.ValidationError;
+import org.summerb.validation.ValidationError;
 
 import ru.skarpushin.swingpm.collections.ListEx;
 

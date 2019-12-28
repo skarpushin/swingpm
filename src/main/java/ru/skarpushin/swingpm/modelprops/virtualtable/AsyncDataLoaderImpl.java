@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.summerb.utils.threads.RecurringBackgroundTask;
 
 public class AsyncDataLoaderImpl<E> extends AsyncDataLoader<E> implements Runnable {
 	private static Logger log = Logger.getLogger(AsyncDataLoaderImpl.class);
