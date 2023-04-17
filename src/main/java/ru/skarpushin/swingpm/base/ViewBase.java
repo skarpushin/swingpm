@@ -36,6 +36,13 @@ public abstract class ViewBase<TPM extends PresentationModel> implements View<TP
 	protected TPM pm;
 	protected BindingContext bindingContext;
 
+	/**
+	 * IMPORTANT: Sub-class must call this method after all properties are
+	 * configured.
+	 * 
+	 * The name of this method comes from Spring, but I don't want to import Spring
+	 * in a pom because this seem to be to heavy dependency for this project
+	 */
 	public void afterPropertiesSet() throws Exception {
 		Edt.invokeOnEdtAsync(initComponentsRunnable);
 	}

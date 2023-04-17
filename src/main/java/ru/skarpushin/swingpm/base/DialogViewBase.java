@@ -44,9 +44,6 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 	protected JDialog dialog;
 
 	@Override
-	protected abstract void internalInitComponents();
-
-	@Override
 	protected void internalRenderTo(Container owner, Object constraints) {
 		Preconditions.checkArgument(owner == null || owner instanceof Window,
 				"Target must not be specified or be sub-calss of Window");
