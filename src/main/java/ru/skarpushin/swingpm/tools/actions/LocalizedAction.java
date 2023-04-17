@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2015-2021 Sergey Karpushin
+ * Copyright 2015-2023 Sergey Karpushin
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License.  You may obtain a copy
@@ -22,7 +22,8 @@ import ru.skarpushin.swingpm.tools.SwingPmSettings;
 
 public abstract class LocalizedAction extends AbstractAction {
 	private static final long serialVersionUID = 5177364704498790332L;
-	private final String actionNameMessageCode;
+	
+	protected final String actionNameMessageCode;
 
 	public LocalizedAction(String actionNameMessageCode) {
 		this.actionNameMessageCode = actionNameMessageCode;
