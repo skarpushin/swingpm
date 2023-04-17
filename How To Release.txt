@@ -1,0 +1,17 @@
+In order to release to maven
+	do `mvn clean deploy -P release`
+	
+	See 
+		https://central.sonatype.org/publish/requirements/gpg/#generating-a-key-pair
+		https://central.sonatype.org/publish/publish-maven/#distribution-management-and-authentication	
+
+In order to get JAR file run maven with 
+	`package`
+	
+In order to export JAR dependencies run maven with 
+	`dependency:copy-dependencies -DincludeScope=runtime`
+	
+In order to install it to local repo
+	install:install-file
+	-OR- 
+	Use Eclipse `Run` Maven item `Maven Install`  
