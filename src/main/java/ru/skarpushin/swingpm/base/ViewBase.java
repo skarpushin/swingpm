@@ -35,6 +35,9 @@ public abstract class ViewBase<TPM extends PresentationModel> implements View<TP
 
 	protected TPM pm;
 	protected BindingContext bindingContext;
+	
+	protected Runnable initComponentsRunnable;
+	protected Runnable unrenderRunnable;
 
 	/**
 	 * IMPORTANT: Sub-class must call this method after all properties are
@@ -44,21 +47,25 @@ public abstract class ViewBase<TPM extends PresentationModel> implements View<TP
 	 * in a pom because this seem to be to heavy dependency for this project
 	 */
 	public void afterPropertiesSet() throws Exception {
+		initComponentsRunnable = buildInitComponentsRunnable();
+		unrenderRunnable = buildUnrenderRunnable();
 		Edt.invokeOnEdtAsync(initComponentsRunnable);
 	}
 
-	private Runnable initComponentsRunnable = new Runnable() {
-		@Override
-		public void run() {
-			try {
-				log.debug("Initializing components: " + ViewBase.this);
-				internalInitComponents();
-				log.debug("Initializing components - complete: " + ViewBase.this);
-			} catch (Throwable t) {
-				log.error("Failed to init components", t);
+	protected Runnable buildInitComponentsRunnable() {
+		return new Runnable() {
+			@Override
+			public void run() {
+				try {
+					log.debug("Initializing components: " + ViewBase.this);
+					internalInitComponents();
+					log.debug("Initializing components - complete: " + ViewBase.this);
+				} catch (Throwable t) {
+					log.error("Failed to init components", t);
+				}
 			}
-		}
-	};
+		};
+	}
 
 	@Override
 	public boolean isAttached() {
@@ -90,7 +97,7 @@ public abstract class ViewBase<TPM extends PresentationModel> implements View<TP
 	 * @author sergeyk
 	 */
 	protected class SetPmRunnable implements Runnable {
-		private final TPM newPm;
+		protected final TPM newPm;
 
 		public SetPmRunnable(TPM newPm) {
 			this.newPm = newPm;
@@ -140,8 +147,8 @@ public abstract class ViewBase<TPM extends PresentationModel> implements View<TP
 	}
 
 	protected class RenderToRunnable implements Runnable {
-		private final Container target;
-		private final Object constraints;
+		protected final Container target;
+		protected final Object constraints;
 
 		public RenderToRunnable(Container target, Object constraints) {
 			this.target = target;
@@ -159,12 +166,14 @@ public abstract class ViewBase<TPM extends PresentationModel> implements View<TP
 		Edt.invokeOnEdtAndWait(unrenderRunnable);
 	}
 
-	private Runnable unrenderRunnable = new Runnable() {
-		@Override
-		public void run() {
-			internalUnrender();
-		}
-	};
+	protected Runnable buildUnrenderRunnable() {
+		return new Runnable() {
+			@Override
+			public void run() {
+				internalUnrender();
+			}
+		};
+	}
 
 	/**
 	 * Most likely will be overridden by subclass in order to bind to PM

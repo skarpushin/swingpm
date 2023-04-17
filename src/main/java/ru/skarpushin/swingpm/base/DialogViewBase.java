@@ -1,18 +1,3 @@
-/*******************************************************************************
- * Copyright 2015-2021 Sergey Karpushin
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License.  You may obtain a copy
- * of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- * License for the specific language governing permissions and limitations under
- * the License.
- ******************************************************************************/
 package ru.skarpushin.swingpm.base;
 
 import java.awt.Container;
@@ -37,11 +22,21 @@ import javax.swing.KeyStroke;
 
 import com.google.common.base.Preconditions;
 
+// TBD: To be exported to swingpm project
 public abstract class DialogViewBase<TPM extends PresentationModel> extends ViewBase<TPM> implements HasWindow {
-	private static final KeyStroke escapeStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
-	private static final String dispatchWindowClosingActionMapKey = "ru.skarpushin.swingpm.base.DialogViewBase:WINDOW_CLOSING";
+	public static final KeyStroke escapeStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+	public static final String dispatchWindowClosingActionMapKey = "ru.skarpushin.swingpm.base.DialogViewBase:WINDOW_CLOSING";
 
 	protected JDialog dialog;
+	protected WindowAdapter windowAdapter;
+	protected ComponentListener componentAdapter;
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		super.afterPropertiesSet();
+		windowAdapter = buildWindowAdapter();
+		componentAdapter = buildComponentAdapter();
+	}
 
 	@Override
 	protected void internalRenderTo(Container owner, Object constraints) {
@@ -49,7 +44,7 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 				"Target must not be specified or be sub-calss of Window");
 		Preconditions.checkState(pm != null, "PM is required for this view");
 
-		if (isDislogMustBeReinitialized(owner, constraints)) {
+		if (isDialogMustBeReinitialized(owner, constraints)) {
 			tearDownPreviousDialogInstance();
 		}
 
@@ -57,13 +52,18 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 			dialog = initDialog((Window) owner, constraints);
 			Preconditions.checkState(dialog != null, "Dialog failed to initialize");
 
-			dialog.addComponentListener(componentAdapter);
-			dialog.addWindowListener(windowAdapter);
-			installEscapeCloseOperation(dialog);
+			if (componentAdapter != null) {
+				dialog.addComponentListener(componentAdapter);
+			}
+			if (windowAdapter != null) {
+				dialog.addWindowListener(windowAdapter);
+			}
+			installEscapeCloseOperation(dialog, dialog.getRootPane());
 			initWindowIcon();
 		}
 
-		showDialog();
+		Window optionalParent = owner instanceof Window ? (Window) owner : null;
+		showDialog(optionalParent);
 	}
 
 	protected List<Image> getWindowIcon() {
@@ -79,19 +79,18 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 	}
 
 	@SuppressWarnings("serial")
-	public static void installEscapeCloseOperation(final JDialog dialog) {
+	public static void installEscapeCloseOperation(final Window window, JRootPane rootPane) {
 		Action dispatchClosing = new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				dialog.dispatchEvent(new WindowEvent(dialog, WindowEvent.WINDOW_CLOSING));
+				window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
 			}
 		};
-		JRootPane root = dialog.getRootPane();
-		root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeStroke, dispatchWindowClosingActionMapKey);
-		root.getActionMap().put(dispatchWindowClosingActionMapKey, dispatchClosing);
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeStroke, dispatchWindowClosingActionMapKey);
+		rootPane.getActionMap().put(dispatchWindowClosingActionMapKey, dispatchClosing);
 	}
 
-	protected void showDialog() {
+	protected void showDialog(Window optionalParent) {
 		// NOTE: IMPORTANT: This ismodal dialog, so this call blocks further
 		// execution!!!
 		dialog.setVisible(true);
@@ -107,30 +106,30 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 		dialog = null;
 	}
 
-	protected boolean isDislogMustBeReinitialized(Container owner, Object constraints) {
+	protected boolean isDialogMustBeReinitialized(Container owner, Object constraints) {
 		return dialog != null && dialog.getOwner() != owner;
 	}
 
-	private WindowAdapter windowAdapter = new WindowAdapter() {
-		@Override
-		public void windowClosing(WindowEvent e) {
-			super.windowClosing(e);
-			if (isAttached()) {
-				dispatchWindowCloseEvent();
+	/**
+	 * This is optional. Subclass might want to provide such adapter impl for
+	 * handling window closing event
+	 */
+	protected WindowAdapter buildWindowAdapter() {
+		return null;
+	}
+
+	protected ComponentAdapter buildComponentAdapter() {
+		return new ComponentAdapter() {
+			@Override
+			public void componentHidden(ComponentEvent e) {
+			}
+
+			@Override
+			public void componentShown(ComponentEvent e) {
+				handleDialogShown();
 			}
 		};
-	};
-
-	private ComponentListener componentAdapter = new ComponentAdapter() {
-		@Override
-		public void componentHidden(ComponentEvent e) {
-		}
-
-		@Override
-		public void componentShown(ComponentEvent e) {
-			handleDialogShown();
-		}
-	};
+	}
 
 	@Override
 	protected void internalUnrender() {
@@ -151,7 +150,7 @@ public abstract class DialogViewBase<TPM extends PresentationModel> extends View
 
 	protected abstract JPanel getRootPanel();
 
-	protected abstract void dispatchWindowCloseEvent();
+	protected abstract void dispatchWindowCloseEvent(ActionEvent originAction);
 
 	@Override
 	public Window getWindow() {
